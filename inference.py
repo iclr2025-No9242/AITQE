@@ -23,7 +23,7 @@ def process_prompt(image_path: str, text: str):
     return f"<img_start>{json.dumps(image_dict)}<img_end>\n{question}"
 
 
-def eval_single_node(model, tokenizer, image_path, text, overall_only=False, gpu_id=0, max_frame_number=4):
+def eval_single_node(model, tokenizer, image_path, text, output_all=False, gpu_id=0, max_frame_number=4):
     processor = model.bind_processor(tokenizer,
                                      config=model.config,
                                      max_frame_number=max_frame_number)
@@ -31,24 +31,27 @@ def eval_single_node(model, tokenizer, image_path, text, overall_only=False, gpu
     proc_ret = processor(prompt)
     proc_ret = move_tensors_to_cuda(proc_ret, gpu_id)
     with torch.inference_mode():
-        if overall_only:
+        if output_all:
             output_ids = model.generate(**proc_ret,
                                     do_sample=False,
                                     num_beams=1,
-                                    stop_strings=["<Overall>"],
-                                    tokenizer=tokenizer,
                                     max_new_tokens=384,
                                     use_cache=True)
         else:
             output_ids = model.generate(**proc_ret,
                                     do_sample=False,
+                                    stop_strings=["<Overall>"],
+                                    tokenizer=tokenizer,
                                     num_beams=1,
                                     max_new_tokens=384,
                                     use_cache=True)
     outputs = tokenizer.batch_decode(
         output_ids[:, proc_ret["input_ids"].shape[1]:],
         skip_special_tokens=True)[0].strip()
-    return outputs
+    if output_all:
+        return outputs
+    else:
+        return outputs[:-1] + "}"
 
 
 def load_model(model_path, gpu_id):
@@ -71,11 +74,11 @@ def main():
     parser.add_argument("--model_path", type=str, default="path/to/aitqe")
     parser.add_argument("--image_path", type=str, default="./test.png")
     parser.add_argument("--caption", type=str, default="Some random text to the image like this is a test")
-    parser.add_argument("--overall_only", action="store_true")
+    parser.add_argument("--output_all", action="store_true")
     args = parser.parse_args()
 
     model, tokenizer = load_model(args.model_path, args.gpu_id)
-    output = eval_single_node(model, tokenizer, args.image_path, args.caption, args.overall_only, args.gpu_id)
+    output = eval_single_node(model, tokenizer, args.image_path, args.caption, args.output_all, args.gpu_id)
     print("="*100)
     print("[Input]")
     print(f"Image:   {args.image_path}")
