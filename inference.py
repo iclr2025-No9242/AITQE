@@ -23,10 +23,9 @@ def process_prompt(image_path: str, text: str):
     return f"<img_start>{json.dumps(image_dict)}<img_end>\n{question}"
 
 
-def eval_single_node(model, tokenizer, image_path, text, output_all=False, gpu_id=0, max_frame_number=4):
+def eval_single_node(model, tokenizer, image_path, text, output_all=False, gpu_id=0):
     processor = model.bind_processor(tokenizer,
-                                     config=model.config,
-                                     max_frame_number=max_frame_number)
+                                     config=model.config)
     prompt = process_prompt(image_path, text)
     proc_ret = processor(prompt)
     proc_ret = move_tensors_to_cuda(proc_ret, gpu_id)

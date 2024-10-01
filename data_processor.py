@@ -131,12 +131,10 @@ class MMDataProcessor(object):
         image_root_path="",
         has_label=False,
         config=None,
-        max_frame_number=None,
         question_loss=False,
         text_filter_domain=[],
         is_infra=False,
         target_format='file',
-        decode_way='',
     ):
         self.config = config
         self.tokenizer = tokenizer
@@ -174,7 +172,6 @@ class MMDataProcessor(object):
         self.default_image_aspect_ratio = config.image_aspect_ratio
         self.mm_file_local_root_path = image_root_path
         self.has_label = has_label
-        self.max_frame_number = max_frame_number
         self.question_loss = question_loss
         self.text_filter_domain = text_filter_domain
         self.is_infra = is_infra
@@ -186,11 +183,10 @@ class MMDataProcessor(object):
         self.split_special_tokens = self.has_label
 
         self.image_pattern = getattr(self.config, 'image_pattern', '<image>')
-        self.frame_pattern = getattr(self.config, 'frame_pattern', '<frame>')
 
         self.target_format = target_format
 
-    def apply_pattern_on_mmobj(self, s, max_frame_number):
+    def apply_pattern_on_mmobj(self, s):
         target_format = self.target_format
         assert target_format in ['file'], f'incorrect target format {target_format}, should be file'
         mm_obj_pattern = re.compile(f"{self.image_start_token}(.*?){self.image_end_token}")
@@ -236,9 +232,8 @@ class MMDataProcessor(object):
         raw_input_str = raw_input_obj
 
         assert isinstance(raw_input_str, str), f"input object {raw_input_str} should be string, but get {type(raw_input_str)}"
-        raw_input_str = self.apply_pattern_on_mmobj(raw_input_str, self.max_frame_number)
-        if self.image_pattern=='<image>' and self.frame_pattern=='<frame>':
-            raw_input_str = self.add_newline_from_end_token(raw_input_str)
+        raw_input_str = self.apply_pattern_on_mmobj(raw_input_str)
+        raw_input_str = self.add_newline_from_end_token(raw_input_str)
         mm_obj_pattern = re.compile(f"{self.image_start_token}(.*?){self.image_end_token}")
         mm_obj_str_list = mm_obj_pattern.findall(raw_input_str)
 
