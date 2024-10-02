@@ -8,7 +8,7 @@ pip install -r requirements.txt
 
 ### Usage
 
-Download AITQE model from [https://huggingface.co/iclr2025-No9242/aitqe](https://huggingface.co/iclr2025-No9242/aitqe).
+Download AITQE model from [https://huggingface.co/iclr2025-No9242/AITQE](https://huggingface.co/iclr2025-No9242/AITQE).
 
 Run the following command to get the overall score (and possibly the rewritten caption):
 
